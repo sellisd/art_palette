@@ -1,11 +1,13 @@
 import logging
+import time
 import webbrowser
 from pathlib import Path
-from random import randint, choice, sample
+from random import choice, randint, sample
+
 from webcolors import hex_to_rgb
-from yaml import load, SafeLoader
+from yaml import SafeLoader, load
+
 import pygame
-import time
 
 
 def maxdiff(a, b):
