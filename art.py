@@ -1,5 +1,4 @@
 import logging
-import time
 import webbrowser
 from pathlib import Path
 from random import choice, randint, sample
@@ -12,22 +11,6 @@ import pygame
 
 def maxdiff(a, b):
     return(max([a-b for a, b in zip(a, b)]))
-
-# directions
-# scroll up or down to change the color
-# once the color matches the background click to see how close you are
-# if you are close enough you win and move to the next level
-# if you are not close enough you lose a life
-# if you run out of lives you lose
-
-
-class TextInfo:
-    def __init__(self, font, size):
-        self.font = font
-        self.size = size
-
-    def render(self, text):
-        self.img = self.font.render(self.text, True, (200, 200, 200), (0, 0, 0))
 
 
 class Block(pygame.sprite.Sprite):
@@ -198,7 +181,7 @@ class Game():
                     if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
                         score = maxdiff(self.blocks[self.current_color].foreground, self.background)
                         if score < 5:
-                            self.accuracy += self.accuracy
+                            self.accuracy += score
                             self.speed += self.clock.get_time()
                             self.clock.tick()
                             self.next_color()
