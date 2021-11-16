@@ -127,11 +127,26 @@ class Game():
         pygame.display.flip()
         self.mode = 'observe'
 
+    def game_over(self):
+        self.mode = 'endgame'
+        self.screen.fill((0, 0, 0))
+        game_over = self.font.render("Game Over", True, (250, 200, 200))
+        self.screen.blit(game_over, game_over.get_rect(center=(self.screen_width/2, self.screen_height/2)))
+        pygame.display.flip()
+
+    def win(self):
+        self.mode = 'endgame'
+        self.screen.fill((0, 0, 0))
+        win = self.font.render("You Win !!!", True, (200, 250, 200))
+        self.screen.blit(win, win.get_rect(center=(self.screen_width/2, self.screen_height/2)))
+        pygame.display.flip()
+
     def next_level(self):
         self.current_color = 0
         self.current_level += 1
         if self.current_level == len(self.levels):
-            self.end()
+            self.win()
+            return
         self.setup_current_level()
         self.draw()
 
@@ -177,6 +192,9 @@ class Game():
                     if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                         self.mode = 'playing'
                         self.next_level()
+                elif self.mode == 'endgame':
+                    if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                        self.end()
                 elif self.mode == 'playing':
                     if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
                         score = maxdiff(self.blocks[self.current_color].foreground, self.background)
@@ -189,7 +207,7 @@ class Game():
                             self.lives -= 1
                             self.draw()
                             if self.lives == 0:
-                                self.end()
+                                self.game_over()
                     elif event.type == pygame.MOUSEWHEEL:
                         if event.y == -1:
                             self.blocks[self.current_color].change_color(1)
