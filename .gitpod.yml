@@ -3,9 +3,9 @@ ports:
   - port: 5900
     onOpen: ignore
   - port: 6080
-    onOpen: ignore
-  - port: 3000
     onOpen: open-browser
+  - port: 3000
+    onOpen: ignore
 tasks:
   - init: pip3 install -r requirements.txt
     command: python3 art.py
