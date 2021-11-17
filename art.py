@@ -60,11 +60,12 @@ class Level():
 
 
 class Game():
-    def __init__(self):
+    def __init__(self, parameters):
+        self.parameters = parameters
         self.levels = []
         self.current_level = 0
         self.load_levels()
-        self.lives = 3
+        self.lives = self.parameters['lives']
         self.accuracy = 0
         self.speed = 0
         self.screen_width = 1024
@@ -75,9 +76,9 @@ class Game():
         external_link = pygame.image.load('assets/external_link.png')
         self.heart = pygame.transform.scale(heart, (25, 25))
         self.external_link = pygame.transform.scale(external_link, (20, 20))
-        self.mode = 'playing'  # 'observe' 'intro'
 
     def load_levels(self):
+        logging.debug('Loading levels')
         levels = list(Path('levels').glob('*.yml'))
         for level in sample(levels, len(levels)):
             self.levels.append(Level(level))
@@ -95,6 +96,7 @@ class Game():
             self.blocks.append(Block(foreground, 100, 100, (self.screen_width-100)/2, (self.screen_height-100)/2, color_axis))
 
     def draw_lives(self):
+        logging.debug('drawing lives')
         for i in range(self.lives):
             img_rect = self.heart.get_rect()
             img_rect.x = self.screen_width - 100 + 30*i
@@ -102,55 +104,59 @@ class Game():
             self.screen.blit(self.heart, img_rect)
 
     def draw_level(self):
+        logging.debug('Drawing level')
         self.background = list(self.level.colors[self.current_color])
         self.screen.fill(self.background)
         self.blocks[self.current_color].draw(self.screen)
         self.draw_title()
 
     def draw_title(self):
+        logging.debug('Drawing title')
         img = self.font.render(f"    {self.level.title} ", True, (200, 200, 200), (0, 0, 0))
         self.screen.blit(img, (3, 3))
         self.screen.blit(self.external_link, (3, 3))
 
     def end_level(self):
+        logging.debug('End of level')
         self.screen.fill("#ECEEEA")
-        self.draw_lives()
         self.screen.blit(self.level.image, ((self.screen_width - self.level.width)/2, (self.screen_height - self.level.height)/2))
         for i, block in enumerate(self.blocks):
             block.move(0, self.screen_height - (i+1)*100)
             block.draw(self.screen)
+        self.draw_lives()
         self.draw_title()
         level_accuracy = self.font.render(f" accuracy: {round(self.accuracy/len(self.blocks),2)} ", True, (200, 200, 200), (0, 0, 0))
         level_speed = self.font.render(f" speed: {round(self.speed/len(self.blocks),2)} ", True, (200, 200, 200), (0, 0, 0))
         self.screen.blit(level_accuracy, (0, 30))
         self.screen.blit(level_speed, (0, 60))
         pygame.display.flip()
-        self.mode = 'observe'
+        self.wait_for_click()
+        self.next_level()
 
-    def game_over(self):
-        self.mode = 'endgame'
+    def game_over(self, win):
+        logging.debug('Game over')
         self.screen.fill((0, 0, 0))
-        game_over = self.font.render("Game Over", True, (250, 200, 200))
+        if win:
+            game_over = self.font.render("You Win !!!", True, (200, 250, 200))
+        else:
+            game_over = self.font.render("Game Over", True, (250, 200, 200))
         self.screen.blit(game_over, game_over.get_rect(center=(self.screen_width/2, self.screen_height/2)))
         pygame.display.flip()
-
-    def win(self):
-        self.mode = 'endgame'
-        self.screen.fill((0, 0, 0))
-        win = self.font.render("You Win !!!", True, (200, 250, 200))
-        self.screen.blit(win, win.get_rect(center=(self.screen_width/2, self.screen_height/2)))
-        pygame.display.flip()
+        self.wait_for_click()
+        self.end()
 
     def next_level(self):
+        logging.debug('Next level')
         self.current_color = 0
         self.current_level += 1
         if self.current_level == len(self.levels):
-            self.win()
+            self.game_over(True)
             return
         self.setup_current_level()
         self.draw()
 
     def next_color(self):
+        logging.debug('Next color')
         self.current_color += 1
         if self.current_color == len(self.blocks):
             self.end_level()
@@ -158,62 +164,86 @@ class Game():
         self.draw()
 
     def draw(self):
+        logging.debug('Drawing')
         self.draw_level()
         self.draw_lives()
-        # draw palette bar
         pygame.display.flip()
 
-    def start(self):
+    def setup_game(self):
+        logging.debug('Setting up game')
         pygame.init()
         self.font = pygame.font.Font(None, 30)
         self.screen = pygame.display.set_mode(
             (self.screen_width, self.screen_height))
         pygame.display.set_caption('Art')
-        self.clock = pygame.time.Clock()
         self.running = True
+        usage_list = [
+          'COLOR MATCHING ART GAME',
+          '',
+          '',
+          'Instructions:',
+          '',
+          'Scroll to change the color of the central square',
+          'Make it match the background color',
+          'Click to advance to the next color',
+          'After matching all colors in a palette the level ends', 
+          'and the artwork is revealed.',
+          'During the game click on the link in the top left corner to get more information on the art.'
+        ]
+        for i, text in enumerate(usage_list):
+            line = self.font.render(text, True, (200, 200, 200))
+            self.screen.blit(line, line.get_rect(center=(self.screen_width/2, 50 + i * 40)))
+        pygame.display.flip()
+        self.clock = pygame.time.Clock()
+        self.wait_for_click()
         self.setup_current_level()
         self.draw()
-        self.run()
+
+    def wait_for_click(self):
+        waiting = True
+        while(waiting):
+            for event in pygame.event.get():
+                if self.check_quit(event):
+                    self.end()
+                if event.type == pygame.MOUSEBUTTONUP:
+                    waiting = False
+
+    def check_quit(self, event):
+        if event.type == pygame.QUIT:
+            return True
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+                return True
+        elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            if self.external_link.get_rect().collidepoint(event.pos):
+                webbrowser.open(self.level.url, new=0)
+        return False
 
     def run(self):
+        logging.debug('Run game')
         while(self.running):
             for event in pygame.event.get():
-                if event.type == pygame.QUIT:
+                if self.check_quit(event):
                     self.running = False
                     self.end()
-                elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_ESCAPE:
-                        self.running = False
-                        self.end()
-                elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                    if self.external_link.get_rect().collidepoint(event.pos):
-                        webbrowser.open(self.level.url, new=0)
-                if self.mode == 'observe':
-                    if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                        self.mode = 'playing'
-                        self.next_level()
-                elif self.mode == 'endgame':
-                    if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                        self.end()
-                elif self.mode == 'playing':
-                    if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
-                        score = maxdiff(self.blocks[self.current_color].foreground, self.background)
-                        if score < 5:
-                            self.accuracy += score
-                            self.speed += self.clock.get_time()
-                            self.clock.tick()
-                            self.next_color()
-                        else:
-                            self.lives -= 1
-                            self.draw()
-                            if self.lives == 0:
-                                self.game_over()
-                    elif event.type == pygame.MOUSEWHEEL:
-                        if event.y == -1:
-                            self.blocks[self.current_color].change_color(1)
-                        if event.y == 1:
-                            self.blocks[self.current_color].change_color(-1)
+                if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+                    score = maxdiff(self.blocks[self.current_color].foreground, self.background)
+                    if score < self.parameters['threshold']:
+                        self.accuracy += score
+                        self.speed += self.clock.get_time()
+                        self.clock.tick()
+                        self.next_color()
+                    else:
+                        self.lives -= 1
                         self.draw()
+                        if self.lives == 0:
+                            self.game_over(False)
+                elif event.type == pygame.MOUSEWHEEL:
+                    if event.y == -1:
+                        self.blocks[self.current_color].change_color(1)
+                    if event.y == 1:
+                        self.blocks[self.current_color].change_color(-1)
+                    self.draw()
 
     def end(self):
         pygame.quit()
@@ -223,6 +253,8 @@ class Game():
 
 if __name__ == '__main__':
     logging.basicConfig(filename='debug.log', level=logging.DEBUG, filemode='w')
-    game = Game()
-    game.start()
+    parameters = {'lives': 3, 'threshold': 5}
+    game = Game(parameters)
+    game.setup_game()
+    game.run()
     logging.debug('Game ended')
