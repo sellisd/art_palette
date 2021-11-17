@@ -1,16 +1,22 @@
 import logging
 import webbrowser
 from pathlib import Path
-from random import choice, randint, sample
+from random import choice, randint, sample, expovariate
 
 from webcolors import hex_to_rgb
 from yaml import SafeLoader, load
 
 import pygame
+import time
 
 
 def maxdiff(a, b):
     return(max([a-b for a, b in zip(a, b)]))
+
+
+def rgb_to_greyscale(rgb):
+    average = 0.299*rgb[0] + 0.587*rgb[1] + 0.114*rgb[2]
+    return([average, average, average])
 
 
 class Block(pygame.sprite.Sprite):
@@ -23,6 +29,7 @@ class Block(pygame.sprite.Sprite):
         self.rect.x = x
         self.rect.y = y
         self.color_axis = color_axis
+        self.greyscaleflag = False
 
     def update_foreground(self):
         logging.debug(f"Updating foreground to {self.foreground}")
@@ -37,12 +44,19 @@ class Block(pygame.sprite.Sprite):
         screen.blit(self.image, self.rect)
 
     def change_color(self, step):
-        self.foreground[self.color_axis] += step
+        if self.greyscaleflag:
+            self.foreground = [i + step for i in self.foreground]
+        else:
+            self.foreground[self.color_axis] += step
         self.update_foreground()
 
     def move(self, newX, newY):
         self.rect.x = newX
         self.rect.y = newY
+
+    def greyscale(self):
+        self.foreground = rgb_to_greyscale(self.foreground)
+        self.greyscaleflag = True
 
 
 class Level():
@@ -72,6 +86,7 @@ class Game():
         self.screen_height = 768
         self.running = False
         self.current_color = 0
+        self.scrolling_direction = -1
         heart = pygame.image.load('assets/heart.png')
         external_link = pygame.image.load('assets/external_link.png')
         self.heart = pygame.transform.scale(heart, (25, 25))
@@ -147,6 +162,7 @@ class Game():
 
     def next_level(self):
         logging.debug('Next level')
+        self.last_bug = time.time()
         self.current_color = 0
         self.current_level += 1
         if self.current_level == len(self.levels):
@@ -178,7 +194,7 @@ class Game():
         pygame.display.set_caption('Art')
         self.running = True
         usage_list = [
-          'COLOR MATCHING ART GAME',
+          'COLOR MATCHING ART GAME beta',
           '',
           '',
           'Instructions:',
@@ -186,9 +202,11 @@ class Game():
           'Scroll to change the color of the central square',
           'Make it match the background color',
           'Click to advance to the next color',
-          'After matching all colors in a palette the level ends', 
+          'After matching all colors in a palette the level ends',
           'and the artwork is revealed.',
-          'During the game click on the link in the top left corner to get more information on the art.'
+          'During the game click on the link in the top left corner to get more information on the art.',
+          '',
+          'Warning: A number of bugs might make winning the game difficult.'
         ]
         for i, text in enumerate(usage_list):
             line = self.font.render(text, True, (200, 200, 200))
@@ -219,9 +237,46 @@ class Game():
                 webbrowser.open(self.level.url, new=0)
         return False
 
+    def bug(self):
+        logging.debug('Bug')
+        # not during in first level
+        # at random time point after first level
+        # flash noise
+        back = self.screen.copy()
+        r = randint(1, 50)
+        for i in range(r, r+10):
+            noise_image = pygame.image.load(f"assets/noise/noise000{str(i).zfill(2)}.png")
+            noise_image = pygame.transform.scale(noise_image, (self.screen_width, self.screen_height))
+            self.screen.blit(noise_image, (0, 0))
+            pygame.display.flip()
+            self.clock.tick(20)
+        # back to normal
+        self.screen.blit(back, (0, 0))
+        bug_type = randint(0, 2)
+        if bug_type == 0:
+            # jump color
+            print("Error 3002.5 overflow in srgb random shift of color.")
+            self.blocks[self.current_color].change_color(choice((-1, 1)) * 100)
+        elif bug_type == 1:  # grey scale
+            print("Error 43 Ink is running low.")
+            self.blocks[self.current_color].greyscale()
+            self.level.colors[self.current_color] = rgb_to_greyscale(self.level.colors[self.current_color])
+        elif bug_type == 2:
+            # - invert direction
+            print("Error 299 I/O error controls inverted")
+            self.scrolling_direction = -self.scrolling_direction
+        # - move block
+        self.draw()
+
     def run(self):
         logging.debug('Run game')
+        r = expovariate(self.parameters['bug_lambda'])
         while(self.running):
+            if self.current_level > 0:
+                if time.time() - self.last_bug > r:
+                    self.last_bug = time.time()
+                    self.bug()
+                    r = expovariate(self.parameters['bug_lambda'])
             for event in pygame.event.get():
                 if self.check_quit(event):
                     self.running = False
@@ -239,9 +294,9 @@ class Game():
                         if self.lives == 0:
                             self.game_over(False)
                 elif event.type == pygame.MOUSEWHEEL:
-                    if event.y == -1:
+                    if event.y == self.scrolling_direction * -1:
                         self.blocks[self.current_color].change_color(1)
-                    if event.y == 1:
+                    if event.y == self.scrolling_direction * 1:
                         self.blocks[self.current_color].change_color(-1)
                     self.draw()
 
@@ -253,7 +308,7 @@ class Game():
 
 if __name__ == '__main__':
     logging.basicConfig(filename='debug.log', level=logging.DEBUG, filemode='w')
-    parameters = {'lives': 3, 'threshold': 5}
+    parameters = {'lives': 3, 'threshold': 5, 'bug_lambda': 0.1}
     game = Game(parameters)
     game.setup_game()
     game.run()
