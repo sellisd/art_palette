@@ -56,6 +56,7 @@ class Block(pygame.sprite.Sprite):
 
     def greyscale(self):
         self.foreground = rgb_to_greyscale(self.foreground)
+        self.image.fill(self.foreground)
         self.greyscaleflag = True
 
 
@@ -242,14 +243,22 @@ class Game():
         # not during in first level
         # at random time point after first level
         # flash noise
+        bug_screen = randint(0, 1)
         back = self.screen.copy()
-        r = randint(1, 50)
-        for i in range(r, r+10):
-            noise_image = pygame.image.load(f"assets/noise/noise000{str(i).zfill(2)}.png")
-            noise_image = pygame.transform.scale(noise_image, (self.screen_width, self.screen_height))
-            self.screen.blit(noise_image, (0, 0))
+        if bug_screen == 0:
+            blue_screen = pygame.image.load('assets/Windows_NT_3.51_BSOD_ita.png')
+            blue_screen = pygame.transform.scale(blue_screen, (self.screen_width, self.screen_height))
+            self.screen.blit(blue_screen, (0, 0))
             pygame.display.flip()
-            self.clock.tick(20)
+            time.sleep(0.5)
+        elif bug_screen == 1:
+            r = randint(1, 50)
+            for i in range(r, r+10):
+                noise_image = pygame.image.load(f"assets/noise/noise000{str(i).zfill(2)}.png")
+                noise_image = pygame.transform.scale(noise_image, (self.screen_width, self.screen_height))
+                self.screen.blit(noise_image, (0, 0))
+                pygame.display.flip()
+                self.clock.tick(20)
         # back to normal
         self.screen.blit(back, (0, 0))
         bug_type = randint(0, 2)
