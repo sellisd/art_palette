@@ -19,6 +19,44 @@ def rgb_to_greyscale(rgb):
     return([average, average, average])
 
 
+class Heart(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__()
+        heart = pygame.image.load('assets/heart.png')
+        broken_heart = pygame.image.load('assets/broken_heart.png')
+        self.heart = pygame.transform.scale(heart, (25, 25))
+        self.broken_heart = pygame.transform.scale(broken_heart, (25, 25))
+        self.image = self.heart
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+        self.last_move = time.time()
+        self.speed = [1, 1]
+
+    def break_heart(self):
+        self.image = self.broken_heart
+
+    def heal_heart(self):
+        self.image = self.heart
+
+    def draw(self, screen):
+        screen.blit(self.image, self.rect)
+
+    def move(self, width, height):
+        if time.time() - self.last_move > 0.01:
+            if self.rect.x <= 0 or self.rect.x >= width - self.rect.width:
+                self.speed[0] = -self.speed[0]
+            if self.rect.y <= 0 or self.rect.y >= height - self.rect.height:
+                self.speed[1] = -self.speed[1]
+            self.rect.x += self.speed[0]
+            self.rect.y += self.speed[1]
+            self.last_move = time.time()
+
+    def move_to(self, x, y):
+        self.rect.x = x
+        self.rect.y = y
+
+
 class Block(pygame.sprite.Sprite):
     def __init__(self, color, width, height, x, y, color_axis):
         super().__init__()
@@ -88,9 +126,10 @@ class Game():
         self.running = False
         self.current_color = 0
         self.scrolling_direction = -1
-        heart = pygame.image.load('assets/heart.png')
+        self.hearts = [Heart(self.screen_width - 100 + 30*i, 10)
+                       for i in range(self.lives)]
+        self.floating = []
         external_link = pygame.image.load('assets/external_link.png')
-        self.heart = pygame.transform.scale(heart, (25, 25))
         self.external_link = pygame.transform.scale(external_link, (20, 20))
 
     def load_levels(self):
@@ -108,16 +147,19 @@ class Game():
         for background in self.level.colors:
             color_axis = randint(0, 2)
             foreground = list(background).copy()
-            foreground[color_axis] = background[color_axis] + 20 * choice([-1, 1])
-            self.blocks.append(Block(foreground, 100, 100, (self.screen_width-100)/2, (self.screen_height-100)/2, color_axis))
+            foreground[color_axis] = background[color_axis] + \
+                20 * choice([-1, 1])
+            self.blocks.append(Block(foreground, 100, 100,
+                                     (self.screen_width-100)/2,
+                                     (self.screen_height-100)/2, color_axis))
 
     def draw_lives(self):
         logging.debug('drawing lives')
-        for i in range(self.lives):
-            img_rect = self.heart.get_rect()
-            img_rect.x = self.screen_width - 100 + 30*i
-            img_rect.y = 10
-            self.screen.blit(self.heart, img_rect)
+        for heart in self.hearts:
+            heart.draw(self.screen)
+        if self.floating:
+            for floating_heart in self.floating:
+                floating_heart.draw(self.screen)
 
     def draw_level(self):
         logging.debug('Drawing level')
@@ -128,21 +170,26 @@ class Game():
 
     def draw_title(self):
         logging.debug('Drawing title')
-        img = self.font.render(f"    {self.level.title} ", True, (200, 200, 200), (0, 0, 0))
+        img = self.font.render(
+            f"    {self.level.title} ", True, (200, 200, 200), (0, 0, 0))
         self.screen.blit(img, (3, 3))
         self.screen.blit(self.external_link, (3, 3))
 
     def end_level(self):
         logging.debug('End of level')
         self.screen.fill("#ECEEEA")
-        self.screen.blit(self.level.image, ((self.screen_width - self.level.width)/2, (self.screen_height - self.level.height)/2))
+        self.screen.blit(self.level.image,
+                         ((self.screen_width - self.level.width)/2,
+                          (self.screen_height - self.level.height)/2))
         for i, block in enumerate(self.blocks):
             block.move(0, self.screen_height - (i+1)*100)
             block.draw(self.screen)
         self.draw_lives()
         self.draw_title()
-        level_accuracy = self.font.render(f" accuracy: {round(self.accuracy/len(self.blocks),2)} ", True, (200, 200, 200), (0, 0, 0))
-        level_speed = self.font.render(f" speed: {round(self.speed/len(self.blocks),2)} ", True, (200, 200, 200), (0, 0, 0))
+        level_accuracy = self.font.render(
+            f" accuracy: {round(self.accuracy/len(self.blocks),2)} ", True, (200, 200, 200), (0, 0, 0))
+        level_speed = self.font.render(
+            f" speed: {round(self.speed/len(self.blocks),2)} ", True, (200, 200, 200), (0, 0, 0))
         self.screen.blit(level_accuracy, (0, 30))
         self.screen.blit(level_speed, (0, 60))
         pygame.display.flip()
@@ -156,7 +203,8 @@ class Game():
             game_over = self.font.render("You Win !!!", True, (200, 250, 200))
         else:
             game_over = self.font.render("Game Over", True, (250, 200, 200))
-        self.screen.blit(game_over, game_over.get_rect(center=(self.screen_width/2, self.screen_height/2)))
+        self.screen.blit(game_over, game_over.get_rect(
+            center=(self.screen_width/2, self.screen_height/2)))
         pygame.display.flip()
         self.wait_for_click()
         self.end()
@@ -195,23 +243,24 @@ class Game():
         pygame.display.set_caption('Art')
         self.running = True
         usage_list = [
-          'COLOR MATCHING ART GAME beta',
-          '',
-          '',
-          'Instructions:',
-          '',
-          'Scroll to change the color of the central square',
-          'Make it match the background color',
-          'Click to advance to the next color',
-          'After matching all colors in a palette the level ends',
-          'and the artwork is revealed.',
-          'During the game click on the link in the top left corner to get more information on the art.',
-          '',
-          'Warning: A number of bugs might make winning the game difficult.'
+            'COLOR MATCHING ART GAME beta',
+            '',
+            '',
+            'Instructions:',
+            '',
+            'Scroll to change the color of the central square',
+            'Make it match the background color',
+            'Click to advance to the next color',
+            'After matching all colors in a palette the level ends',
+            'and the artwork is revealed.',
+            'During the game click on the link in the top left corner to get more information on the art.',
+            '',
+            'Warning: A number of bugs might make winning the game difficult.'
         ]
         for i, text in enumerate(usage_list):
             line = self.font.render(text, True, (200, 200, 200))
-            self.screen.blit(line, line.get_rect(center=(self.screen_width/2, 50 + i * 40)))
+            self.screen.blit(line, line.get_rect(
+                center=(self.screen_width/2, 50 + i * 40)))
         pygame.display.flip()
         self.clock = pygame.time.Clock()
         self.wait_for_click()
@@ -246,22 +295,26 @@ class Game():
         bug_screen = randint(0, 1)
         back = self.screen.copy()
         if bug_screen == 0:
-            blue_screen = pygame.image.load('assets/Windows_NT_3.51_BSOD_ita.png')
-            blue_screen = pygame.transform.scale(blue_screen, (self.screen_width, self.screen_height))
+            blue_screen = pygame.image.load(
+                'assets/Windows_NT_3.51_BSOD_ita.png')
+            blue_screen = pygame.transform.scale(
+                blue_screen, (self.screen_width, self.screen_height))
             self.screen.blit(blue_screen, (0, 0))
             pygame.display.flip()
             time.sleep(0.5)
         elif bug_screen == 1:
             r = randint(1, 50)
             for i in range(r, r+10):
-                noise_image = pygame.image.load(f"assets/noise/noise000{str(i).zfill(2)}.png")
-                noise_image = pygame.transform.scale(noise_image, (self.screen_width, self.screen_height))
+                noise_image = pygame.image.load(
+                    f"assets/noise/noise000{str(i).zfill(2)}.png")
+                noise_image = pygame.transform.scale(
+                    noise_image, (self.screen_width, self.screen_height))
                 self.screen.blit(noise_image, (0, 0))
                 pygame.display.flip()
                 self.clock.tick(20)
         # back to normal
         self.screen.blit(back, (0, 0))
-        bug_type = randint(0, 2)
+        bug_type = randint(0, 3)
         if bug_type == 0:
             # jump color
             print("Error 3002.5 overflow in srgb random shift of color.")
@@ -269,12 +322,21 @@ class Game():
         elif bug_type == 1:  # grey scale
             print("Error 43 Ink is running low.")
             self.blocks[self.current_color].greyscale()
-            self.level.colors[self.current_color] = rgb_to_greyscale(self.level.colors[self.current_color])
+            self.level.colors[self.current_color] = rgb_to_greyscale(
+                self.level.colors[self.current_color])
         elif bug_type == 2:
             # - invert direction
             print("Error 299 I/O error controls inverted")
             self.scrolling_direction = -self.scrolling_direction
-        # - move block
+        elif bug_type == 3:  # heart attack
+            print("Error 01 Kernel panic, heart attack. Hover over the heart to recover")
+            if self.hearts:
+                self.floating.append(self.hearts.pop())
+                self.floating[-1].break_heart()
+                self.lives -= 1
+            else:
+                self.game_over(False)
+            self.draw_lives()
         self.draw()
 
     def run(self):
@@ -282,6 +344,11 @@ class Game():
         r = expovariate(self.parameters['bug_lambda'])
         while(self.running):
             if self.current_level > 0:
+                if self.floating:
+                    for floating_heart in self.floating:
+                        floating_heart.move(
+                            self.screen_width, self.screen_height)
+                    self.draw()
                 if time.time() - self.last_bug > r:
                     self.last_bug = time.time()
                     self.bug()
@@ -291,7 +358,8 @@ class Game():
                     self.running = False
                     self.end()
                 if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
-                    score = maxdiff(self.blocks[self.current_color].foreground, self.background)
+                    score = maxdiff(self.blocks[self.current_color].foreground,
+                                    self.background)
                     if score < self.parameters['threshold']:
                         self.accuracy += score
                         self.speed += self.clock.get_time()
@@ -299,6 +367,7 @@ class Game():
                         self.next_color()
                     else:
                         self.lives -= 1
+                        self.hearts.pop()
                         self.draw()
                         if self.lives == 0:
                             self.game_over(False)
@@ -308,6 +377,17 @@ class Game():
                     if event.y == self.scrolling_direction * 1:
                         self.blocks[self.current_color].change_color(-1)
                     self.draw()
+                elif event.type == pygame.MOUSEMOTION:
+                    for floating_heart in self.floating:
+                        if floating_heart.rect.collidepoint(event.pos):
+                            self.hearts.append(floating_heart)
+                            self.hearts[-1].move_to(self.screen_width -
+                                                    100 + 30 * (self.lives-1), 10)
+                            self.hearts[-1].heal_heart()
+                            self.lives += 1
+                            self.floating.remove(floating_heart)
+                            self.draw()
+                            break
 
     def end(self):
         pygame.quit()
@@ -316,8 +396,9 @@ class Game():
 
 
 if __name__ == '__main__':
-    logging.basicConfig(filename='debug.log', level=logging.DEBUG, filemode='w')
-    parameters = {'lives': 3, 'threshold': 5, 'bug_lambda': 0.1}
+    logging.basicConfig(filename='debug.log',
+                        level=logging.DEBUG, filemode='w')
+    parameters = {'lives': 3, 'threshold': 10, 'bug_lambda': 0.1}
     game = Game(parameters)
     game.setup_game()
     game.run()
