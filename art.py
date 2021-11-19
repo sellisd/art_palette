@@ -322,8 +322,8 @@ class Game():
             pygame.display.flip()
             time.sleep(0.5)
         elif bug_screen == 1:
-            r = randint(1, 50)
-            for i in range(r+10):
+            r = randint(0, 51)
+            for i in range(r, r+10):
                 self.screen.blit(self.assets['noise'][i], (0, 0))
                 pygame.display.flip()
                 self.clock.tick(20)
