@@ -26,6 +26,7 @@ class Heart(pygame.sprite.Sprite):
         broken_heart = pygame.image.load('assets/broken_heart.png')
         self.heart = pygame.transform.scale(heart, (25, 25))
         self.broken_heart = pygame.transform.scale(broken_heart, (25, 25))
+        self.bug_assets = {}
         self.image = self.heart
         self.rect = self.image.get_rect()
         self.rect.x = x
@@ -129,8 +130,17 @@ class Game():
         self.hearts = [Heart(self.screen_width - 100 + 30*i, 10)
                        for i in range(self.lives)]
         self.floating = []
+        self.assets = {}
+
+    def load_assets(self):
+        blue_screen = pygame.image.load('assets/Windows_NT_3.51_BSOD_ita.png')
+        self.assets['blue_screen'] = pygame.transform.scale(blue_screen, (self.screen_width, self.screen_height))
+        self.assets['noise'] = []
+        for i in range(1, 60):
+            noise_image = pygame.image.load(f"assets/noise/noise000{str(i).zfill(2)}.png")
+            self.assets['noise'].append(pygame.transform.scale(noise_image, (self.screen_width, self.screen_height)))
         external_link = pygame.image.load('assets/external_link.png')
-        self.external_link = pygame.transform.scale(external_link, (20, 20))
+        self.assets['external_link'] = pygame.transform.scale(external_link, (20, 20))
 
     def load_levels(self):
         logging.debug('Loading levels')
@@ -173,7 +183,7 @@ class Game():
         img = self.font.render(
             f"    {self.level.title} ", True, (200, 200, 200), (0, 0, 0))
         self.screen.blit(img, (3, 3))
-        self.screen.blit(self.external_link, (3, 3))
+        self.screen.blit(self.assets['external_link'], (3, 3))
 
     def end_level(self):
         logging.debug('End of level')
@@ -262,6 +272,7 @@ class Game():
             self.screen.blit(line, line.get_rect(
                 center=(self.screen_width/2, 50 + i * 40)))
         pygame.display.flip()
+        self.load_assets()
         self.clock = pygame.time.Clock()
         self.wait_for_click()
         self.setup_current_level()
@@ -283,7 +294,7 @@ class Game():
             if event.key == pygame.K_ESCAPE:
                 return True
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-            if self.external_link.get_rect().collidepoint(event.pos):
+            if self.assets['external_link'].get_rect().collidepoint(event.pos):
                 webbrowser.open(self.level.url, new=0)
         return False
 
@@ -295,21 +306,13 @@ class Game():
         bug_screen = randint(0, 1)
         back = self.screen.copy()
         if bug_screen == 0:
-            blue_screen = pygame.image.load(
-                'assets/Windows_NT_3.51_BSOD_ita.png')
-            blue_screen = pygame.transform.scale(
-                blue_screen, (self.screen_width, self.screen_height))
-            self.screen.blit(blue_screen, (0, 0))
+            self.screen.blit(self.assets['blue_screen'], (0, 0))
             pygame.display.flip()
             time.sleep(0.5)
         elif bug_screen == 1:
             r = randint(1, 50)
-            for i in range(r, r+10):
-                noise_image = pygame.image.load(
-                    f"assets/noise/noise000{str(i).zfill(2)}.png")
-                noise_image = pygame.transform.scale(
-                    noise_image, (self.screen_width, self.screen_height))
-                self.screen.blit(noise_image, (0, 0))
+            for i in range(r+10):
+                self.screen.blit(self.assets['noise'][i], (0, 0))
                 pygame.display.flip()
                 self.clock.tick(20)
         # back to normal
@@ -317,19 +320,19 @@ class Game():
         bug_type = randint(0, 3)
         if bug_type == 0:
             # jump color
-            print("Error 3002.5 overflow in srgb random shift of color.")
+            message = "Error 3002.5 overflow in srgb random shift of color."
             self.blocks[self.current_color].change_color(choice((-1, 1)) * 100)
         elif bug_type == 1:  # grey scale
-            print("Error 43 Ink is running low.")
+            message = "Error 43 Ink is running low."
             self.blocks[self.current_color].greyscale()
             self.level.colors[self.current_color] = rgb_to_greyscale(
                 self.level.colors[self.current_color])
         elif bug_type == 2:
             # - invert direction
-            print("Error 299 I/O error controls inverted")
+            message = "Error 299 I/O error controls inverted"
             self.scrolling_direction = -self.scrolling_direction
         elif bug_type == 3:  # heart attack
-            print("Error 01 Kernel panic, heart attack. Hover over the heart to recover")
+            message = "Error 01 Kernel panic, heart attack. Hover over the heart to recover"
             if self.hearts:
                 self.floating.append(self.hearts.pop())
                 self.floating[-1].break_heart()
