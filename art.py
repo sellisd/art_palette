@@ -8,6 +8,7 @@ from yaml import SafeLoader, load
 
 import pygame
 import time
+from datetime import datetime
 
 
 def maxdiff(a, b):
@@ -131,6 +132,7 @@ class Game():
                        for i in range(self.lives)]
         self.floating = []
         self.assets = {}
+        self.message_buffer = []
 
     def load_assets(self):
         blue_screen = pygame.image.load('assets/Windows_NT_3.51_BSOD_ita.png')
@@ -224,6 +226,7 @@ class Game():
         self.last_bug = time.time()
         self.current_color = 0
         self.current_level += 1
+        self.message_buffer = []
         if self.current_level == len(self.levels):
             self.game_over(True)
             return
@@ -238,16 +241,25 @@ class Game():
             return
         self.draw()
 
+    def draw_messagebox(self):
+        logging.debug('Drawing messagebox')
+        for i, message in enumerate(self.message_buffer[-3:]):
+            line = self.monofont.render(message, True, (200, 200, 200), (0, 0, 0))
+            self.screen.blit(line, line.get_rect(topleft=(30, self.screen_height -100 + i*20)))
+        pygame.display.flip()
+
     def draw(self):
         logging.debug('Drawing')
         self.draw_level()
         self.draw_lives()
+        self.draw_messagebox()
         pygame.display.flip()
 
     def setup_game(self):
         logging.debug('Setting up game')
         pygame.init()
         self.font = pygame.font.Font(None, 30)
+        self.monofont = pygame.font.SysFont('monospace', 20)
         self.screen = pygame.display.set_mode(
             (self.screen_width, self.screen_height))
         pygame.display.set_caption('Art')
@@ -320,19 +332,19 @@ class Game():
         bug_type = randint(0, 3)
         if bug_type == 0:
             # jump color
-            message = "Error 3002.5 overflow in srgb random shift of color."
+            message = "Overflow in srgb random shift of color."
             self.blocks[self.current_color].change_color(choice((-1, 1)) * 100)
         elif bug_type == 1:  # grey scale
-            message = "Error 43 Ink is running low."
+            message = "Ink is running low."
             self.blocks[self.current_color].greyscale()
             self.level.colors[self.current_color] = rgb_to_greyscale(
                 self.level.colors[self.current_color])
         elif bug_type == 2:
             # - invert direction
-            message = "Error 299 I/O error controls inverted"
+            message = "I/O error controls inverted"
             self.scrolling_direction = -self.scrolling_direction
         elif bug_type == 3:  # heart attack
-            message = "Error 01 Kernel panic, heart attack. Hover over the heart to recover"
+            message = "Kernel panic, heart attack. Hover over heart to heal."
             if self.hearts:
                 self.floating.append(self.hearts.pop())
                 self.floating[-1].break_heart()
@@ -340,6 +352,8 @@ class Game():
             else:
                 self.game_over(False)
             self.draw_lives()
+        time_string = datetime.now().strftime('%b %d %H:%M:%S')
+        self.message_buffer.append(f"{time_string} root - 0.0 {message}")
         self.draw()
 
     def run(self):
