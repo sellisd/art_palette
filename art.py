@@ -138,7 +138,7 @@ class Game():
         blue_screen = pygame.image.load('assets/Windows_NT_3.51_BSOD_ita.png')
         self.assets['blue_screen'] = pygame.transform.scale(blue_screen, (self.screen_width, self.screen_height))
         self.assets['noise'] = []
-        for i in range(1, 60):
+        for i in range(1, 61):
             noise_image = pygame.image.load(f"assets/noise/noise000{str(i).zfill(2)}.png")
             self.assets['noise'].append(pygame.transform.scale(noise_image, (self.screen_width, self.screen_height)))
         external_link = pygame.image.load('assets/external_link.png')
@@ -324,6 +324,7 @@ class Game():
         elif bug_screen == 1:
             r = randint(0, 51)
             for i in range(r, r+10):
+                logging.debug(i)
                 self.screen.blit(self.assets['noise'][i], (0, 0))
                 pygame.display.flip()
                 self.clock.tick(20)
