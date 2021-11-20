@@ -7,6 +7,7 @@ Use the mouse to scroll up or down to change the color of the central square. On
 ## Installation
 
 ```
-pip3 install -r requirements.txt
-python3 art.py
+git clone https://github.com/sellisd/art_palette.git
+pip3 install -r art_palette/requirements.txt
+python3 art_palette/art.py
 ```
