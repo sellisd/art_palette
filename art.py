@@ -1,7 +1,7 @@
 import logging
 import webbrowser
 from pathlib import Path
-from random import choice, randint, sample, expovariate
+from random import choice, randint, sample, random
 
 from webcolors import hex_to_rgb
 from yaml import SafeLoader, load
@@ -245,7 +245,7 @@ class Game():
         logging.debug('Drawing messagebox')
         for i, message in enumerate(self.message_buffer[-3:]):
             line = self.monofont.render(message, True, (200, 200, 200), (0, 0, 0))
-            self.screen.blit(line, line.get_rect(topleft=(30, self.screen_height -100 + i*20)))
+            self.screen.blit(line, line.get_rect(topleft=(30, self.screen_height - 100 + i*20)))
         pygame.display.flip()
 
     def draw(self):
@@ -312,8 +312,6 @@ class Game():
 
     def bug(self):
         logging.debug('Bug')
-        # not during in first level
-        # at random time point after first level
         # flash noise
         bug_screen = randint(0, 1)
         back = self.screen.copy()
@@ -359,18 +357,22 @@ class Game():
 
     def run(self):
         logging.debug('Run game')
-        r = expovariate(self.parameters['bug_lambda'])
+        bug_activated = False         # no bugs during in first level
         while(self.running):
+            if self.floating:
+                for floating_heart in self.floating:
+                    floating_heart.move(
+                        self.screen_width, self.screen_height)
+                self.draw()
             if self.current_level > 0:
-                if self.floating:
-                    for floating_heart in self.floating:
-                        floating_heart.move(
-                            self.screen_width, self.screen_height)
-                    self.draw()
-                if time.time() - self.last_bug > r:
-                    self.last_bug = time.time()
-                    self.bug()
-                    r = expovariate(self.parameters['bug_lambda'])
+                if bug_activated:
+                    if time.time() > r:
+                        bug_activated = False
+                        self.bug()
+                else:
+                    # pick when to activate bug
+                    r = random() * 10 + time.time()
+                    bug_activated = True
             for event in pygame.event.get():
                 if self.check_quit(event):
                     self.running = False
@@ -416,7 +418,7 @@ class Game():
 if __name__ == '__main__':
     logging.basicConfig(filename='debug.log',
                         level=logging.DEBUG, filemode='w')
-    parameters = {'lives': 3, 'threshold': 10, 'bug_lambda': 0.1}
+    parameters = {'lives': 3, 'threshold': 10}
     game = Game(parameters)
     game.setup_game()
     game.run()
