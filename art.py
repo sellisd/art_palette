@@ -258,8 +258,8 @@ class Game():
     def draw(self):
         logging.debug('Drawing')
         self.draw_level()
-        self.draw_messagebox()
         self.draw_lives()
+        self.draw_messagebox()
         pygame.display.flip()
 
     def setup_game(self):
