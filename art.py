@@ -133,16 +133,21 @@ class Game():
         self.floating = []
         self.assets = {}
         self.message_buffer = []
+        self.elements = {}
 
     def load_assets(self):
         blue_screen = pygame.image.load('assets/Windows_NT_3.51_BSOD_ita.png')
-        self.assets['blue_screen'] = pygame.transform.scale(blue_screen, (self.screen_width, self.screen_height))
+        self.assets['blue_screen'] = pygame.transform.scale(
+            blue_screen, (self.screen_width, self.screen_height))
         self.assets['noise'] = []
         for i in range(1, 61):
-            noise_image = pygame.image.load(f"assets/noise/noise000{str(i).zfill(2)}.png")
-            self.assets['noise'].append(pygame.transform.scale(noise_image, (self.screen_width, self.screen_height)))
+            noise_image = pygame.image.load(
+                f"assets/noise/noise000{str(i).zfill(2)}.png")
+            self.assets['noise'].append(pygame.transform.scale(
+                noise_image, (self.screen_width, self.screen_height)))
         external_link = pygame.image.load('assets/external_link.png')
-        self.assets['external_link'] = pygame.transform.scale(external_link, (20, 20))
+        self.assets['external_link'] = pygame.transform.scale(
+            external_link, (20, 20))
 
     def load_levels(self):
         logging.debug('Loading levels')
@@ -182,10 +187,10 @@ class Game():
 
     def draw_title(self):
         logging.debug('Drawing title')
-        img = self.font.render(
+        self.elements['title'] = self.font.render(
             f"    {self.level.title} ", True, (200, 200, 200), (0, 0, 0))
-        self.screen.blit(img, (3, 3))
-        self.screen.blit(self.assets['external_link'], (3, 3))
+        self.screen.blit(self.elements['title'], (5, 5))
+        self.screen.blit(self.assets['external_link'], (5, 5))
 
     def end_level(self):
         logging.debug('End of level')
@@ -244,15 +249,17 @@ class Game():
     def draw_messagebox(self):
         logging.debug('Drawing messagebox')
         for i, message in enumerate(self.message_buffer[-3:]):
-            line = self.monofont.render(message, True, (200, 200, 200), (0, 0, 0))
-            self.screen.blit(line, line.get_rect(topleft=(30, self.screen_height - 100 + i*20)))
+            line = self.monofont.render(
+                message, True, (200, 200, 200), (0, 0, 0))
+            self.screen.blit(line, line.get_rect(
+                topleft=(30, self.screen_height - 100 + i*20)))
         pygame.display.flip()
 
     def draw(self):
         logging.debug('Drawing')
         self.draw_level()
-        self.draw_lives()
         self.draw_messagebox()
+        self.draw_lives()
         pygame.display.flip()
 
     def setup_game(self):
@@ -306,7 +313,8 @@ class Game():
             if event.key == pygame.K_ESCAPE:
                 return True
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-            if self.assets['external_link'].get_rect().collidepoint(event.pos):
+            if (self.assets['external_link'].get_rect().collidepoint(event.pos) or
+                ('title' in self.elements and self.elements['title'].get_rect().collidepoint(event.pos))):
                 webbrowser.open(self.level.url, new=0)
         return False
 
