@@ -33,7 +33,7 @@ class Heart(pygame.sprite.Sprite):
         self.rect.x = x
         self.rect.y = y
         self.last_move = time.time()
-        self.speed = [1, 1]
+        self.speed = [randint(-1, 1), randint(-1, 1)]
 
     def break_heart(self):
         self.image = self.broken_heart
@@ -328,7 +328,7 @@ class Game():
             pygame.display.flip()
             time.sleep(0.5)
         elif bug_screen == 1:
-            r = randint(0, 51)
+            r = randint(0, 50)
             for i in range(r, r+10):
                 logging.debug(i)
                 self.screen.blit(self.assets['noise'][i], (0, 0))
