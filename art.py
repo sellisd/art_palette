@@ -296,7 +296,7 @@ class Game():
             for event in pygame.event.get():
                 if self.check_quit(event):
                     self.end()
-                if event.type == pygame.MOUSEBUTTONUP:
+                if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
                     waiting = False
 
     def check_quit(self, event):
