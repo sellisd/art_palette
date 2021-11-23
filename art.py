@@ -395,10 +395,10 @@ class Game():
                         self.next_color()
                     else:
                         self.lives -= 1
-                        self.hearts.pop()
-                        self.draw()
                         if self.lives == 0:
                             self.game_over(False)
+                        self.hearts.pop()
+                        self.draw()
                 elif event.type == pygame.MOUSEWHEEL:
                     if event.y == self.scrolling_direction * -1:
                         self.blocks[self.current_color].change_color(1)
