@@ -1,3 +1,5 @@
+[![Run on Repl.it](https://repl.it/badge/github/sellisd/art_palette)](https://repl.it/github/sellisd/art_palette)
+[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/https://github.com/sellisd/art_palette)
 ## Art palette game
 
 A single player game of color matching. The goal is to match the foreground and background colors to reveal a palette inspired by a famous piece of art.
