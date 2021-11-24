@@ -313,7 +313,7 @@ class Game():
             for event in pygame.event.get():
                 if self.check_quit(event):
                     self.end()
-                if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+                if self.advance(event):
                     waiting = False
 
     def check_quit(self, event):
@@ -395,7 +395,7 @@ class Game():
                 if self.check_quit(event):
                     self.running = False
                     self.end()
-                if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+                if self.advance(event):
                     score = maxdiff(self.blocks[self.current_color].foreground,
                                     self.background)
                     if score < self.parameters['threshold']:
@@ -415,6 +415,12 @@ class Game():
                     if event.y == self.scrolling_direction * 1:
                         self.blocks[self.current_color].change_color(-1)
                     self.draw()
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_UP:
+                        self.blocks[self.current_color].change_color(self.scrolling_direction)
+                    if event.key == pygame.K_DOWN:
+                        self.blocks[self.current_color].change_color(self.scrolling_direction * -1)
+                    self.draw()
                 elif event.type == pygame.MOUSEMOTION:
                     for floating_heart in self.floating:
                         if floating_heart.rect.collidepoint(event.pos):
@@ -426,6 +432,14 @@ class Game():
                             self.floating.remove(floating_heart)
                             self.draw()
                             break
+
+    def advance(self, event):
+        if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+            return True
+        if event.type == pygame.KEYDOWN:
+            if event.key in [pygame.K_SPACE, pygame.K_RETURN]:
+                return True
+        return False
 
     def end(self):
         self.stats.to_csv("highscore.csv", index=False)
