@@ -441,7 +441,10 @@ class Game():
         return False
 
     def end(self):
-        self.stats.to_csv("highscore.csv", mode = 'a', index=False)
+        self.stats.to_csv(self.parameters['highscore'],
+                          mode='a',
+                          index=False,
+                          header=(not Path(self.parameters['highscore']).exists()))
         pygame.quit()
         print('Game Over')
         exit(0)
@@ -450,7 +453,7 @@ class Game():
 if __name__ == '__main__':
     logging.basicConfig(filename='debug.log',
                         level=logging.DEBUG, filemode='w')
-    parameters = {'lives': 3, 'threshold': 10}
+    parameters = {'lives': 3, 'threshold': 10, 'highscore': 'highscore.csv'}
     game = Game(parameters)
     game.setup_game()
     game.run()
