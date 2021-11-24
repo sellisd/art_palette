@@ -11,5 +11,6 @@ Use the mouse to scroll up or down to change the color of the central square. On
 ```
 git clone https://github.com/sellisd/art_palette.git
 pip3 install -r art_palette/requirements.txt
-python3 art_palette/art.py
+cd art_palette
+python3 art.py
 ```
