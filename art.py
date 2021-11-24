@@ -34,7 +34,7 @@ class Heart(pygame.sprite.Sprite):
         self.rect.x = x
         self.rect.y = y
         self.last_move = time.time()
-        self.speed = [randint(-1, 1), randint(-1, 1)]
+        self.speed = [choice([-1, 1]), choice([-1, 1])]
 
     def break_heart(self):
         self.image = self.broken_heart
