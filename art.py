@@ -1,14 +1,15 @@
 import logging
+import time
 import webbrowser
+from datetime import datetime
 from pathlib import Path
-from random import choice, randint, sample, random
+from random import choice, randint, random, sample
 
+import pandas as pd
 from webcolors import hex_to_rgb
 from yaml import SafeLoader, load
 
 import pygame
-import time
-from datetime import datetime
 
 
 def maxdiff(a, b):
@@ -134,6 +135,8 @@ class Game():
         self.assets = {}
         self.message_buffer = []
         self.elements = {}
+        self.stats = pd.DataFrame(
+            columns=['level', 'accuracy', 'speed', 'level_order'])
 
     def load_assets(self):
         blue_screen = pygame.image.load('assets/Windows_NT_3.51_BSOD_ita.png')
@@ -203,10 +206,17 @@ class Game():
             block.draw(self.screen)
         self.draw_lives()
         self.draw_title()
+        accuracy = round(self.accuracy/len(self.blocks), 2)
+        self.accuracy = 0
+        speed = round(self.speed/len(self.blocks), 2)
+        self.stats = self.stats.append({'level': self.current_level,
+                                        'accuracy': accuracy,
+                                        'speed': speed,
+                                        'level_order': self.current_level}, ignore_index=True)
         level_accuracy = self.font.render(
-            f" accuracy: {round(self.accuracy/len(self.blocks),2)} ", True, (200, 200, 200), (0, 0, 0))
+            f" accuracy: {accuracy} ", True, (200, 200, 200), (0, 0, 0))
         level_speed = self.font.render(
-            f" speed: {round(self.speed/len(self.blocks),2)} ", True, (200, 200, 200), (0, 0, 0))
+            f" speed: {speed} ", True, (200, 200, 200), (0, 0, 0))
         self.screen.blit(level_accuracy, (0, 30))
         self.screen.blit(level_speed, (0, 60))
         pygame.display.flip()
@@ -314,7 +324,7 @@ class Game():
                 return True
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             if (self.assets['external_link'].get_rect().collidepoint(event.pos) or
-                ('title' in self.elements and self.elements['title'].get_rect().collidepoint(event.pos))):
+                    ('title' in self.elements and self.elements['title'].get_rect().collidepoint(event.pos))):
                 webbrowser.open(self.level.url, new=0)
         return False
 
@@ -418,6 +428,7 @@ class Game():
                             break
 
     def end(self):
+        self.stats.to_csv("highscore.csv", index=False)
         pygame.quit()
         print('Game Over')
         exit(0)

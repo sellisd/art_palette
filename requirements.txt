@@ -2,4 +2,5 @@ webcolors
 pygame
 pyaml
 datetime
+pandas
 
