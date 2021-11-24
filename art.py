@@ -442,7 +442,7 @@ class Game():
         return False
 
     def end(self):
-        self.stats.to_csv("highscore.csv", index=False)
+        self.stats.to_csv("highscore.csv", mode = 'a', index=False)
         pygame.quit()
         print('Game Over')
         exit(0)
