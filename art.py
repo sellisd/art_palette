@@ -259,7 +259,7 @@ class Game():
     def draw_messagebox(self):
         logging.debug('Drawing messagebox')
         for i, message in enumerate(self.message_buffer[-3:]):
-            line = self.monofont.render(
+            line = self.font.render(
                 message, True, (200, 200, 200), (0, 0, 0))
             self.screen.blit(line, line.get_rect(
                 topleft=(30, self.screen_height - 100 + i*20)))
@@ -275,8 +275,7 @@ class Game():
     def setup_game(self):
         logging.debug('Setting up game')
         pygame.init()
-        self.font = pygame.font.Font(None, 30)
-        self.monofont = pygame.font.SysFont('monospace', 20)
+        self.font = pygame.font.Font("fonts/FiraCode-Regular.ttf", 20)
         self.screen = pygame.display.set_mode(
             (self.screen_width, self.screen_height))
         pygame.display.set_caption('Art')
@@ -292,7 +291,7 @@ class Game():
             'Click to advance to the next color',
             'After matching all colors in a palette the level ends',
             'and the artwork is revealed.',
-            'During the game click on the link in the top left corner to get more information on the art.',
+            'During the game click on the title to get more information on the art.',
             '',
             'Warning: A number of bugs might make winning the game difficult.'
         ]
