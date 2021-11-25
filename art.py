@@ -194,6 +194,72 @@ class Game():
             f"    {self.level.title} ", True, (200, 200, 200), (0, 0, 0))
         self.screen.blit(self.elements['title'], (5, 5))
         self.screen.blit(self.assets['external_link'], (5, 5))
+        self.draw_tutorial()
+
+    def draw_tutorial(self): # first time user experience
+        logging.debug('Drawing tutorial')
+        if self.current_level == 0:
+            if self.tutorial == 0:
+                message = self.font.render(
+                  ' Use the mouse or arrow keys to change the color of the central square. ',
+                  True, (33, 33, 33), (232, 234, 246)
+                )
+                self.screen.blit(message, (self.screen_width/2 - message.get_width()/2, self.screen_height/2 - message.get_height()/2-100))
+            elif self.tutorial == 1:
+                message = self.font.render(
+                  ' Well done!!! Keep going ...',
+                  True, (33, 33, 33), (232, 234, 246)
+                )
+                self.screen.blit(message, (self.screen_width/2 - message.get_width()/2, self.screen_height/2 - message.get_height()/2+100))
+                message = self.font.render(
+                  ' When the square color matches the background ',
+                  True, (33, 33, 33), (232, 234, 246)
+                )
+                self.screen.blit(message, (self.screen_width/2 - message.get_width()/2, self.screen_height/2 - message.get_height()/2+230))
+                message = self.font.render(
+                  ' [Left-click] or press [Enter] or [spacebar] to advance. ',
+                  True, (33, 33, 33), (232, 234, 246)
+                )
+                self.screen.blit(message, (self.screen_width/2 - message.get_width()/2, self.screen_height/2 - message.get_height()/2+260))
+            elif self.tutorial == 2:
+                message = self.font.render(
+                    ' Oops! If the colors do not match you will lose a life! ',
+                    True, (33, 33, 33), (232, 234, 246)
+                )
+                self.screen.blit(message, (self.screen_width/2 - message.get_width()/2, self.screen_height/2 - message.get_height()/2+100))
+            elif self.tutorial == 3:
+                message = self.font.render(
+                    ' Well done! continue with the following palette colors ... ',
+                    True, (33, 33, 33), (232, 234, 246)
+                )
+                self.screen.blit(message, (self.screen_width/2 - message.get_width()/2, self.screen_height/2 - message.get_height()/2-100))
+            elif self.tutorial == 4:
+                message = self.font.render(
+                    ' Doing well! Keep going to reach the end of the level ! ',
+                    True, (33, 33, 33), (232, 234, 246)
+                )
+                self.screen.blit(message, (self.screen_width/2 - message.get_width()/2, self.screen_height/2 - message.get_height()/2-100))
+            elif self.tutorial == 5:
+                message = self.font.render(
+                  ' Well done! First level complete! ',
+                  True, (33, 33, 33), (232, 234, 246)
+                )
+                self.screen.blit(message, (self.screen_width/2 - message.get_width()/2, self.screen_height/2 - message.get_height()/2+200))
+                message = self.fontbold.render(
+                  ' Warning! Next level will be harder! ',
+                  True, (33, 33, 33), (232, 234, 246)
+                )
+                self.screen.blit(message, (self.screen_width/2 - message.get_width()/2, self.screen_height/2 - message.get_height()/2+230))
+                message = self.font.render(
+                  ' Bugs in the source code will cause glitches. ',
+                  True, (33, 33, 33), (232, 234, 246)
+                )
+                self.screen.blit(message, (self.screen_width/2 - message.get_width()/2, self.screen_height/2 - message.get_height()/2+260))
+                message = self.font.render(
+                  ' Read the log messages to see how to deal with them, Good luck ! ',
+                  True, (33, 33, 33), (232, 234, 246)
+                )
+                self.screen.blit(message, (self.screen_width/2 - message.get_width()/2, self.screen_height/2 - message.get_height()/2+290))
 
     def end_level(self):
         logging.debug('End of level')
@@ -252,6 +318,8 @@ class Game():
         logging.debug('Next color')
         self.current_color += 1
         if self.current_color == len(self.blocks):
+            if self.tutorial == 4:
+                self.tutorial = 5
             self.end_level()
             return
         self.draw()
@@ -276,6 +344,8 @@ class Game():
         logging.debug('Setting up game')
         pygame.init()
         self.font = pygame.font.Font("fonts/FiraCode-Regular.ttf", 20)
+        self.fontbold = pygame.font.Font("fonts/FiraCode-Bold.ttf", 20)
+        self.tutorial = 0
         self.screen = pygame.display.set_mode(
             (self.screen_width, self.screen_height))
         pygame.display.set_caption('Art')
@@ -401,8 +471,14 @@ class Game():
                         self.accuracy += score
                         self.speed += self.clock.get_time()
                         self.clock.tick()
+                        if self.tutorial in [1, 2]:
+                            self.tutorial = 3
+                        elif self.tutorial == 3:
+                            self.tutorial = 4
                         self.next_color()
                     else:
+                        if self.tutorial == 1:
+                            self.tutorial = 2
                         self.lives -= 1
                         if self.lives == 0:
                             self.game_over(False)
@@ -413,13 +489,20 @@ class Game():
                         self.blocks[self.current_color].change_color(1)
                     if event.y == self.scrolling_direction * 1:
                         self.blocks[self.current_color].change_color(-1)
+                    if self.tutorial == 0:
+                        self.tutorial = 1
                     self.draw()
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_UP:
                         self.blocks[self.current_color].change_color(self.scrolling_direction)
+                        if self.tutorial == 0:
+                            self.tutorial = 1
+                        self.draw()
                     if event.key == pygame.K_DOWN:
                         self.blocks[self.current_color].change_color(self.scrolling_direction * -1)
-                    self.draw()
+                        if self.tutorial == 0:
+                            self.tutorial = 1
+                        self.draw()
                 elif event.type == pygame.MOUSEMOTION:
                     for floating_heart in self.floating:
                         if floating_heart.rect.collidepoint(event.pos):
