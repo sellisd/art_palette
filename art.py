@@ -191,7 +191,7 @@ class Game():
     def draw_title(self):
         logging.debug('Drawing title')
         self.elements['title'] = self.font.render(
-            f"    {self.level.title} ", True, (200, 200, 200), (0, 0, 0))
+            f"    {self.level.title} ", True, (200, 200, 200), (33, 33, 33))
         self.screen.blit(self.elements['title'], (5, 5))
         self.screen.blit(self.assets['external_link'], (5, 5))
         self.draw_tutorial()
@@ -280,9 +280,9 @@ class Game():
                                         'speed': speed,
                                         'level_order': self.current_level}, ignore_index=True)
         level_accuracy = self.font.render(
-            f" accuracy: {accuracy} ", True, (200, 200, 200), (0, 0, 0))
+            f" accuracy: {accuracy} ", True, (200, 200, 200), (33, 33, 33))
         level_speed = self.font.render(
-            f" speed: {speed} ", True, (200, 200, 200), (0, 0, 0))
+            f" speed: {speed} ", True, (200, 200, 200), (33, 33, 33))
         self.screen.blit(level_accuracy, (0, 30))
         self.screen.blit(level_speed, (0, 60))
         pygame.display.flip()
@@ -291,11 +291,11 @@ class Game():
 
     def game_over(self, win):
         logging.debug('Game over')
-        self.screen.fill((0, 0, 0))
+        self.screen.fill((33, 33, 33))
         if win:
-            game_over = self.font.render("You Win !!!", True, (200, 250, 200))
+            game_over = self.fontbold.render("You Win !!!", True, (200, 250, 200))
         else:
-            game_over = self.font.render("Game Over", True, (250, 200, 200))
+            game_over = self.fontbold.render("Game Over", True, (250, 200, 200))
         self.screen.blit(game_over, game_over.get_rect(
             center=(self.screen_width/2, self.screen_height/2)))
         pygame.display.flip()
@@ -328,7 +328,7 @@ class Game():
         logging.debug('Drawing messagebox')
         for i, message in enumerate(self.message_buffer[-3:]):
             line = self.font.render(
-                message, True, (200, 200, 200), (0, 0, 0))
+                message, True, (200, 200, 200), (33, 33, 33))
             self.screen.blit(line, line.get_rect(
                 topleft=(30, self.screen_height - 100 + i*20)))
         pygame.display.flip()
@@ -349,6 +349,7 @@ class Game():
         self.screen = pygame.display.set_mode(
             (self.screen_width, self.screen_height))
         pygame.display.set_caption('Art')
+        self.screen.fill((33, 33, 33))
         self.running = True
         usage_list = [
             'COLOR MATCHING ART GAME beta',
@@ -366,7 +367,7 @@ class Game():
             'Warning: A number of bugs might make winning the game difficult.'
         ]
         for i, text in enumerate(usage_list):
-            line = self.font.render(text, True, (200, 200, 200))
+            line = self.font.render(text, True, (200, 200, 200), (33, 33, 33))
             self.screen.blit(line, line.get_rect(
                 center=(self.screen_width/2, 50 + i * 40)))
         pygame.display.flip()
