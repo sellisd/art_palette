@@ -196,7 +196,7 @@ class Game():
         self.screen.blit(self.assets['external_link'], (5, 5))
         self.draw_tutorial()
 
-    def draw_tutorial(self): # first time user experience
+    def draw_tutorial(self):  # first time user experience
         logging.debug('Drawing tutorial')
         if self.current_level == 0:
             if self.tutorial == 0:
@@ -272,17 +272,18 @@ class Game():
             block.draw(self.screen)
         self.draw_lives()
         self.draw_title()
-        accuracy = round(self.accuracy/len(self.blocks), 2)
+        accuracy = abs(self.accuracy/len(self.blocks))
+        accuracy = round(100 * (self.parameters['threshold'] - accuracy) / self.parameters['threshold'], 2)
         self.accuracy = 0
         speed = round(self.speed/len(self.blocks), 2)
-        self.stats = self.stats.append({'level': self.current_level,
+        self.stats = self.stats.append({'level': self.level.title,
                                         'accuracy': accuracy,
                                         'speed': speed,
                                         'level_order': self.current_level}, ignore_index=True)
         level_accuracy = self.font.render(
-            f" accuracy: {accuracy} ", True, (200, 200, 200), (33, 33, 33))
+            f" accuracy: {accuracy:.0f}% ", True, (200, 200, 200), (33, 33, 33))
         level_speed = self.font.render(
-            f" speed: {speed} ", True, (200, 200, 200), (33, 33, 33))
+            f" speed: {round(speed/1000,2)} sec ", True, (200, 200, 200), (33, 33, 33))
         self.screen.blit(level_accuracy, (0, 30))
         self.screen.blit(level_speed, (0, 60))
         pygame.display.flip()
@@ -537,7 +538,7 @@ class Game():
 if __name__ == '__main__':
     logging.basicConfig(filename='debug.log',
                         level=logging.DEBUG, filemode='w')
-    parameters = {'lives': 3, 'threshold': 10, 'highscore': 'highscore.csv'}
+    parameters = {'lives': 3, 'threshold': 5, 'highscore': 'highscore.csv'}
     game = Game(parameters)
     game.setup_game()
     game.run()
