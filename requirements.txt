@@ -3,4 +3,5 @@ pygame
 pyaml
 datetime
 pandas
+dataframe_image
 

@@ -1,11 +1,11 @@
 import logging
 import time
 import webbrowser
-import dataframe_image as dfi
 from datetime import datetime
 from pathlib import Path
 from random import choice, randint, random, sample
 
+import dataframe_image as dfi
 import pandas as pd
 from webcolors import hex_to_rgb
 from yaml import SafeLoader, load
