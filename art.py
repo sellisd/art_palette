@@ -1,6 +1,7 @@
 import logging
 import time
 import webbrowser
+import dataframe_image as dfi
 from datetime import datetime
 from pathlib import Path
 from random import choice, randint, random, sample
@@ -275,7 +276,7 @@ class Game():
         accuracy = abs(self.accuracy/len(self.blocks))
         accuracy = round(100 * (self.parameters['threshold'] - accuracy) / self.parameters['threshold'], 2)
         self.accuracy = 0
-        speed = round(self.speed/len(self.blocks), 2)
+        speed = round((self.speed/1000)/len(self.blocks), 2)
         self.stats = self.stats.append({'level': self.level.title,
                                         'accuracy': accuracy,
                                         'speed': speed,
@@ -283,9 +284,9 @@ class Game():
         level_accuracy = self.font.render(
             f" accuracy: {accuracy:.0f}% ", True, (200, 200, 200), (33, 33, 33))
         level_speed = self.font.render(
-            f" speed: {round(speed/1000,2)} sec ", True, (200, 200, 200), (33, 33, 33))
-        self.screen.blit(level_accuracy, (0, 30))
-        self.screen.blit(level_speed, (0, 60))
+            f" speed: {round(speed,2)} sec ", True, (200, 200, 200), (33, 33, 33))
+        self.screen.blit(level_accuracy, (0, 35))
+        self.screen.blit(level_speed, (0, 65))
         pygame.display.flip()
         self.wait_for_click()
         self.next_level()
@@ -298,7 +299,12 @@ class Game():
         else:
             game_over = self.fontbold.render("Game Over", True, (250, 200, 200))
         self.screen.blit(game_over, game_over.get_rect(
-            center=(self.screen_width/2, self.screen_height/2)))
+            center=(self.screen_width/2, 150)))
+        if self.stats.shape[0] > 0:
+            dfi.export(self.stats[['level', 'accuracy', 'speed']], 'game_stats.png')
+            stats_image = pygame.image.load('game_stats.png')
+            table_rect = stats_image.get_rect(center=(self.screen_width/2, self.screen_height/2))
+        self.screen.blit(stats_image, table_rect)
         pygame.display.flip()
         self.wait_for_click()
         self.end()
