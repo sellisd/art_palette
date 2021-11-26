@@ -136,6 +136,7 @@ class Game():
         self.assets = {}
         self.message_buffer = []
         self.elements = {}
+        self.sounds = {}
         self.stats = pd.DataFrame(
             columns=['level', 'accuracy', 'speed', 'level_order'])
 
@@ -152,6 +153,8 @@ class Game():
         external_link = pygame.image.load('assets/external_link.png')
         self.assets['external_link'] = pygame.transform.scale(
             external_link, (20, 20))
+        self.sounds['beep'] = pygame.mixer.Sound('effects/E_morse_code.ogg')
+        self.sounds['noise'] = pygame.mixer.Sound('effects/Radio_Static.mp3')
 
     def load_levels(self):
         logging.debug('Loading levels')
@@ -413,9 +416,11 @@ class Game():
         if bug_screen == 0:
             self.screen.blit(self.assets['blue_screen'], (0, 0))
             pygame.display.flip()
+            pygame.mixer.Sound.play(self.sounds['beep'])
             time.sleep(0.5)
         elif bug_screen == 1:
             r = randint(0, 50)
+            pygame.mixer.Sound.play(self.sounds['noise'])
             for i in range(r, r+10):
                 logging.debug(i)
                 self.screen.blit(self.assets['noise'][i], (0, 0))
