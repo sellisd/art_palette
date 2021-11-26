@@ -304,7 +304,7 @@ class Game():
             dfi.export(self.stats[['level', 'accuracy', 'speed']], 'game_stats.png')
             stats_image = pygame.image.load('game_stats.png')
             table_rect = stats_image.get_rect(center=(self.screen_width/2, self.screen_height/2))
-        self.screen.blit(stats_image, table_rect)
+            self.screen.blit(stats_image, table_rect)
         pygame.display.flip()
         self.wait_for_click()
         self.end()
