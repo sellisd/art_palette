@@ -25,6 +25,7 @@ def rgb_to_greyscale(rgb):
 class Heart(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__()
+        pygame.init()
         heart = pygame.image.load('assets/heart.png')
         broken_heart = pygame.image.load('assets/broken_heart.png')
         self.heart = pygame.transform.scale(heart, (25, 25))
@@ -352,7 +353,6 @@ class Game():
 
     def setup_game(self):
         logging.debug('Setting up game')
-        pygame.init()
         self.font = pygame.font.Font("fonts/FiraCode-Regular.ttf", 20)
         self.fontbold = pygame.font.Font("fonts/FiraCode-Bold.ttf", 20)
         self.tutorial = 0
