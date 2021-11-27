@@ -154,7 +154,7 @@ class Game():
         external_link = pygame.image.load('assets/external_link.png')
         self.assets['external_link'] = pygame.transform.scale(
             external_link, (20, 20))
-        self.sounds['beep'] = pygame.mixer.Sound('effects/E_morse_code.ogg')
+        self.sounds['beep'] = pygame.mixer.Sound('effects/SqrSinBleepF.wav')
         self.sounds['noise'] = pygame.mixer.Sound('effects/Radio_Static.mp3')
 
     def load_levels(self):
